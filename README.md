@@ -94,7 +94,7 @@ of the above packages, these should be installed automatically.)
 
     Copy the Zsh completion file to the Zsh site-functions directory:
 
-        $ cp misc/zsh/_tmsu /usr/share/zsh/site-functions
+        $ cp completions/zsh/_tmsu /usr/share/zsh/site-functions
 
 From Source
 -----------

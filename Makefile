@@ -5,7 +5,7 @@ MAN_INSTALL_DIR=$(DESTDIR)/usr/share/man/man1
 ZSH_COMP_INSTALL_DIR=$(DESTDIR)/usr/share/zsh/site-functions
 
 # other vars
-VER=$(shell grep -o "[0-9]\+\.[0-9]\+\.[0-9]\+" src/github.com/oniony/TMSU/version/version.go)
+VER=$(shell grep -o "[0-9]\+\.[0-9]\+\.[0-9]\+" version/version.go)
 SHELL=/bin/sh
 ARCH=$(shell uname -m)
 DIST_NAME=tmsu-$(ARCH)-$(VER)
@@ -21,7 +21,7 @@ clean:
 	@echo
 	@echo "CLEANING"
 	@echo
-	go clean github.com/oniony/TMSU
+	go clean tmsu
 	rm -Rf bin
 	rm -Rf $(DIST_DIR)
 	rm -f $(DIST_FILE)
@@ -31,7 +31,7 @@ compile:
 	@echo "COMPILING"
 	@echo
 	@mkdir -p bin
-	go build -o bin/tmsu github.com/oniony/TMSU
+	CGO_ENABLED=1 go build -o bin/tmsu tmsu
 
 test: unit-test integration-test
 
@@ -39,7 +39,7 @@ unit-test: compile
 	@echo
 	@echo "RUNNING UNIT TESTS"
 	@echo
-	go test github.com/oniony/TMSU/...
+	go test tmsu/...
 
 integration-test: compile
 	@echo
@@ -54,13 +54,13 @@ dist: compile
 	@mkdir -p $(DIST_DIR)
 	@mkdir -p $(DIST_DIR)/bin
 	@mkdir -p $(DIST_DIR)/man
-	@mkdir -p $(DIST_DIR)/misc/zsh
+	@mkdir -p $(DIST_DIR)/completions
 	cp -R bin -t $(DIST_DIR)
 	cp README.md -t $(DIST_DIR)
 	cp COPYING.md -t $(DIST_DIR)
-	cp misc/bin/* -t $(DIST_DIR)/bin/
-	gzip -fc misc/man/tmsu.1 >$(DIST_DIR)/man/tmsu.1.gz
-	cp misc/zsh/_tmsu -t $(DIST_DIR)/misc/zsh/
+	cp scripts/* -t $(DIST_DIR)/bin/
+	gzip -fc docs/tmsu.1 >$(DIST_DIR)/man/tmsu.1.gz
+	cp completions/zsh/_tmsu -t $(DIST_DIR)/completions/
 	tar czf $(DIST_FILE) $(DIST_DIR)
 
 install: 
@@ -72,10 +72,10 @@ install:
 	mkdir -p $(MAN_INSTALL_DIR)
 	mkdir -p $(ZSH_COMP_INSTALL_DIR)
 	cp bin/tmsu -t $(INSTALL_DIR)
-	cp misc/bin/mount.tmsu -t $(MOUNT_INSTALL_DIR)
-	cp misc/bin/tmsu-* -t $(INSTALL_DIR)
-	gzip -fc misc/man/tmsu.1 >$(MAN_INSTALL_DIR)/tmsu.1.gz
-	cp misc/zsh/_tmsu -t $(ZSH_COMP_INSTALL_DIR)
+	cp scripts/mount.tmsu -t $(MOUNT_INSTALL_DIR)
+	cp scripts/tmsu-* -t $(INSTALL_DIR)
+	gzip -fc docs/tmsu.1 >$(MAN_INSTALL_DIR)/tmsu.1.gz
+	cp completions/zsh/_tmsu -t $(ZSH_COMP_INSTALL_DIR)
 
 uninstall:
 	@echo "UNINSTALLING"

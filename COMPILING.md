@@ -102,7 +102,7 @@ Windows
 
     Now run the following command:
 
-        go build -o tmsu.exe github.com/oniony/TMSU
+        go build -o tmsu.exe tmsu
 
     This will build `tmsu.exe` to the working directory.
 
