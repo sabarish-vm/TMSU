@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+
+# Test: basic mount and directory structure
+# - Creates a test file, tags it, mounts VFS, verifies structure, unmounts
+
+set -ex
+
+# create temp dir
+TEST_TMPDIR="$(mktemp -d -t tmsu_tmp)"
+DATA_DIR="${TEST_TMPDIR}/data"
+MNT_DIR="${TEST_TMPDIR}/mnt/"
+umount -f "$MNT_DIR" 2>/dev/null || true
+mkdir -p "$DATA_DIR"
+mkdir -p "$MNT_DIR"
+DB_PATH="${DATA_DIR}/.tmsu/db"
+
+# test
+
+echo "photo" >"$DATA_DIR/vacation.jpg"
+TMSU_DB="$DB_PATH" tmsu init "$DATA_DIR"
+TMSU_DB="$DB_PATH" tmsu tag "$DATA_DIR/vacation.jpg" vacation
+
+TMSU_DB="$DB_PATH" tmsu mount --foreground "${MNT_DIR}" &
+mount_pid=$!
+
+# Wait up to 10 seconds for the mount to appear
+for _ in 1 2 3 4 5; do
+    ls "${MNT_DIR}/.database" >/dev/null 2>&1 && break
+    sleep 2
+done
+
+# Record directory listings
+ls "$MNT_DIR" >|"${TEST_TMPDIR}/stdout" 2>|"${TEST_TMPDIR}/stderr"
+ls "${MNT_DIR}/tags/" >>"${TEST_TMPDIR}/stdout" 2>>"${TEST_TMPDIR}/stderr"
+readlink "${MNT_DIR}/.database" >>"${TEST_TMPDIR}/stdout" 2>>"${TEST_TMPDIR}/stderr"
+
+# Cleanup
+kill "$mount_pid" 2>/dev/null || true
+wait "$mount_pid" 2>/dev/null || true
+
+# verify
+
+diff "${TEST_TMPDIR}/stderr" - <<EOF
+EOF
+if [[ $? -ne 0 ]]; then
+    exit 1
+fi
+
+diff "${TEST_TMPDIR}/stdout" - <<EOF
+queries
+tags
+README.md
+vacation
+${DB_PATH}
+EOF
+if [[ $? -ne 0 ]]; then
+    exit 1
+fi

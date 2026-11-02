@@ -41,4 +41,4 @@ var commands = []*Command{
 	&UntaggedCommand,
 	&ValuesCommand,
 	&VersionCommand,
-	&VfsCommand}
+}
